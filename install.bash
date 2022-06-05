@@ -7,6 +7,6 @@ chmod +x ~/.steamGameDataLinking/steamGameDataLinking.bash
 
 cd ~/.config/autostart/
 curl https://raw.githubusercontent.com/Deckweiss/SteamLinuxGameDataLinking/main/steamGameDataLinking.desktop -O
-chmod +x ~/.steamGameDataLinking/steamGameDataLinking.desktop
+chmod +x ~/.config/autostart/steamGameDataLinking.desktop
 
 #curl https://raw.githubusercontent.com/Deckweiss/SteamLinuxGameDataLinking/main/install.bash | bash
