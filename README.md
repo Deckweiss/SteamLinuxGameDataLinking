@@ -2,11 +2,11 @@
 Exposes game data from Steam Proton to the user for backing up saves, modifying config files, tinkering or modding.
 
 # Install
-Run the following command in terminal:
+Run the following command in a console:
 
 `curl https://raw.githubusercontent.com/Deckweiss/SteamLinuxGameDataLinking/main/install.bash | bash`
 
 # Uninstall
-Run the following command in terminal:
+Run the following command in a console:
 
 `curl https://raw.githubusercontent.com/Deckweiss/SteamLinuxGameDataLinking/main/uninstall.bash | bash`
