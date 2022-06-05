@@ -43,40 +43,47 @@ function createLinkIfTargetExists() {
 function createLinksWhenRelevant() {
   local appName="$1"
   local directory="$2"
-  local targetParentDirName="${3:-$(basename -- "$directory")}"
+  local linkName="${3:-$(basename -- "$directory")}"
 
   local listOfSubdirs
   listOfSubdirs="$(ls "$directory" | grep -vFx "$STEAM_IGNORE_DIRECTORIES")"
 
-  [[ -z "$listOfSubdirs" ]] && echo "No interesting subdirectories found in $targetParentDirName" && return
+  [[ -z "$listOfSubdirs" ]] && echo "No interesting subdirectories found in $directory" && return
 
   echo "$listOfSubdirs" | while read -r targetDirName; do
-    local fullTargetParent="$LINKS_GO_HERE/$appName/$targetParentDirName"
-    [[ ! -d "$fullTargetParent" ]] && mkdir -p "$fullTargetParent"
-    local fullTargetDir="$directory/$targetDirName"
-    echo "$fullTargetDir"
-    local fullDirectParentDir="$LINKS_GO_HERE/$appName/$targetParentDirName/$targetDirName"
-    createLink "$fullDirectParentDir" "$fullTargetDir"
+    local parentDir="$LINKS_GO_HERE/$appName/$linkName"
+    local targetDir="$directory/$targetDirName"
+    createLink "$parentDir" "$targetDir"
   done
+
+  #echo "$listOfSubdirs" | while read -r targetDirName; do
+  #  local fullTargetParent="$LINKS_GO_HERE/$appName/$linkName"
+  #  [[ ! -d "$fullTargetParent" ]] && mkdir -p "$fullTargetParent"
+  #  local fullTargetDir="$directory/$targetDirName"
+  #  echo "$fullTargetDir"
+  #  local fullDirectParentDir="$LINKS_GO_HERE/$appName/$linkName/$targetDirName"
+  #  createLink "$fullDirectParentDir" "$fullTargetDir"
+  #done
 }
 
-function createUserdataLink() {
-  echo "hi"
+function createUserdataLinks() {
+  local appName="$1"
+  local directory="$2"
 }
 
-function updateGameLinks() {
+function createPfxLinks() {
   local appName="$1"
   local directory="$2"
 
   mkdir -p "$LINKS_GO_HERE/$appName"
 
   local driveC="$directory"/pfx/drive_c
-  createLinkIfTargetExists "$LINKS_GO_HERE/$appName/Compatdata_DriveC" "$driveC"
+  createLinkIfTargetExists "$LINKS_GO_HERE/$appName/pfx_DriveC" "$driveC"
 
   local documentsPath="$directory"/pfx/drive_c/users/steamuser/Documents
   # When documentPath that we assumed does not exists, skip it
   if [[ -d "$documentsPath" && ! -L "$documentsPath" ]]; then
-    createLinksWhenRelevant "$appName" "$documentsPath" "Compatdata_Documents"
+    createLinksWhenRelevant "$appName" "$documentsPath" "pfx_Documents"
   else
     echo "No documents directory found"
   fi
@@ -84,7 +91,7 @@ function updateGameLinks() {
   local myDocumentsPath="$directory"/pfx/drive_c/users/steamuser/My\ Documents
   # When my documents path that we assumed does not exists, skip it
   if [[ -d "$myDocumentsPath" && ! -L "$myDocumentsPath" ]]; then
-    createLinksWhenRelevant "$appName" "$myDocumentsPath" "Compatdata_My_Documents"
+    createLinksWhenRelevant "$appName" "$myDocumentsPath" "pfx_MyDocuments"
   else
     echo "No my documents directory found"
   fi
@@ -92,21 +99,21 @@ function updateGameLinks() {
   local appdataPath="$directory"/pfx/drive_c/users/steamuser/AppData/LocalLow
   # When appdata that we assumed does not exists, skip it
   if [[ -d "$appdataPath" && ! -L "$appdataPath" ]]; then
-    createLinksWhenRelevant "$appName" "$appdataPath" "Compatdata_AppData"
+    createLinksWhenRelevant "$appName" "$appdataPath" "pfx_AppData_LocalLow"
   else
-    echo "No appdata directory found"
+    echo "No appdata locallow directory found"
   fi
 
   local appdataPath="$directory"/pfx/drive_c/users/steamuser/AppData/Roaming
-    # When appdata that we assumed does not exists, skip it
-    if [[ -d "$appdataPath" && ! -L "$appdataPath" ]]; then
-      createLinksWhenRelevant "$appName" "$appdataPath" "Compatdata_AppData"
-    else
-      echo "No appdata directory found"
-    fi
+  # When appdata that we assumed does not exists, skip it
+  if [[ -d "$appdataPath" && ! -L "$appdataPath" ]]; then
+    createLinksWhenRelevant "$appName" "$appdataPath" "pfx_AppData_Roaming"
+  else
+    echo "No appdata roaming directory found"
+  fi
 }
 
-function update() {
+function create() {
   local appManifest
   for appManifest in "$STEAM_APPMANIFEST_PATH/"*.acf; do
     local appid="$(grep -oP '(?<="appid"\t\t).*' "$appManifest" | sed 's/"//g')"
@@ -118,7 +125,8 @@ function update() {
 
     echo "Working on - id: $appid name: $appName compatdata: $compatdataDir"
 
-    updateGameLinks "$appName" "$compatdataDir"
+    createPfxLinks "$appName" "$compatdataDir"
+    createUserdataLinks "$appName" "$compatdataDir"
 
     echo " "
     echo " "
@@ -136,4 +144,4 @@ function cleanup() {
 }
 
 cleanup
-update
+create
