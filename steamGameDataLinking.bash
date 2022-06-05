@@ -47,6 +47,8 @@ function createLinksWhenRelevant() {
   local directory="$2"
   local linkName="${3:-$(basename -- "$directory")}"
 
+
+
   local listOfSubdirs
   listOfSubdirs="$(ls "$directory" | grep -vFx "$STEAM_IGNORE_DIRECTORIES")"
 
@@ -84,18 +86,18 @@ function createPfxLinks() {
     echo "  No my documents directory found"
   fi
 
-  local appdataPath="$directory"/pfx/drive_c/users/steamuser/AppData/LocalLow
+  local appdataLocalPath="$directory"/pfx/drive_c/users/steamuser/AppData/LocalLow
   # When appdata that we assumed does not exists, skip it
-  if [[ -d "$appdataPath" && ! -L "$appdataPath" ]]; then
-    createLinksWhenRelevant "$appName" "$appdataPath" "pfx_AppData_LocalLow"
+  if [[ -d "$appdataLocalPath" && ! -L "$appdataLocalPath" ]]; then
+    createLinksWhenRelevant "$appName" "$appdataLocalPath" "pfx_AppData_LocalLow"
   else
     echo "  No appdata locallow directory found"
   fi
 
-  local appdataPath="$directory"/pfx/drive_c/users/steamuser/AppData/Roaming
+  local appdataRoamingPath="$directory"/pfx/drive_c/users/steamuser/AppData/Roaming
   # When appdata that we assumed does not exists, skip it
-  if [[ -d "$appdataPath" && ! -L "$appdataPath" ]]; then
-    createLinksWhenRelevant "$appName" "$appdataPath" "pfx_AppData_Roaming"
+  if [[ -d "$appdataRoamingPath" && ! -L "$appdataRoamingPath" ]]; then
+    createLinksWhenRelevant "$appName" "$appdataRoamingPath" "pfx_AppData_Roaming"
   else
     echo "  No appdata roaming directory found"
   fi
