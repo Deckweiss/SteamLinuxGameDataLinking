@@ -1,5 +1,5 @@
 # SteamLinuxGameDataLinking
-Exposes game data from Steam Proton to the user for backing up saves, modifying config files or modding.
+Exposes game data from Steam Proton to the user for backing up saves, modifying config files, tinkering or modding.
 
 # Install
 Run the following command in terminal:
