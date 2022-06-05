@@ -3,6 +3,8 @@
 LINKS_GO_HERE=~/Steam
 STEAM_COMPATDATA_PATH=~/.local/share/Steam/steamapps/compatdata
 STEAM_APPMANIFEST_PATH=~/.local/share/Steam/steamapps
+STEAM_USERDATA_PATH=~/.local/share/Steam/userdata
+STEAM_INSTALL_PATH=~/.local/share/Steam/steamapps/common/
 
 read -r -d '' STEAM_IGNORE_DIRECTORIES <<EOM
 Downloads
@@ -30,13 +32,13 @@ function createLink() {
   local parentDir="$1"
   local targetDir="$2"
   ln -s "$targetDir" "$parentDir"
-  echo "Created Link $parentDir -> $targetDir"
+  echo "  Created Link $parentDir -> $targetDir"
 }
 
 function createLinkIfTargetExists() {
   local parentDir="$1"
   local targetDir="$2"
-  [[ ! -d "$targetDir" ]] && echo "Target directory does not exist: $targetDir" && return
+  [[ ! -d "$targetDir" ]] && echo "  Target directory does not exist: $targetDir" && return
   createLink "$parentDir" "$targetDir"
 }
 
@@ -48,27 +50,13 @@ function createLinksWhenRelevant() {
   local listOfSubdirs
   listOfSubdirs="$(ls "$directory" | grep -vFx "$STEAM_IGNORE_DIRECTORIES")"
 
-  [[ -z "$listOfSubdirs" ]] && echo "No interesting subdirectories found in $directory" && return
+  [[ -z "$listOfSubdirs" ]] && echo "  No interesting subdirectories found in $directory" && return
 
   echo "$listOfSubdirs" | while read -r targetDirName; do
     local parentDir="$LINKS_GO_HERE/$appName/$linkName"
     local targetDir="$directory/$targetDirName"
     createLink "$parentDir" "$targetDir"
   done
-
-  #echo "$listOfSubdirs" | while read -r targetDirName; do
-  #  local fullTargetParent="$LINKS_GO_HERE/$appName/$linkName"
-  #  [[ ! -d "$fullTargetParent" ]] && mkdir -p "$fullTargetParent"
-  #  local fullTargetDir="$directory/$targetDirName"
-  #  echo "$fullTargetDir"
-  #  local fullDirectParentDir="$LINKS_GO_HERE/$appName/$linkName/$targetDirName"
-  #  createLink "$fullDirectParentDir" "$fullTargetDir"
-  #done
-}
-
-function createUserdataLinks() {
-  local appName="$1"
-  local directory="$2"
 }
 
 function createPfxLinks() {
@@ -85,7 +73,7 @@ function createPfxLinks() {
   if [[ -d "$documentsPath" && ! -L "$documentsPath" ]]; then
     createLinksWhenRelevant "$appName" "$documentsPath" "pfx_Documents"
   else
-    echo "No documents directory found"
+    echo "  No documents directory found"
   fi
 
   local myDocumentsPath="$directory"/pfx/drive_c/users/steamuser/My\ Documents
@@ -93,7 +81,7 @@ function createPfxLinks() {
   if [[ -d "$myDocumentsPath" && ! -L "$myDocumentsPath" ]]; then
     createLinksWhenRelevant "$appName" "$myDocumentsPath" "pfx_MyDocuments"
   else
-    echo "No my documents directory found"
+    echo "  No my documents directory found"
   fi
 
   local appdataPath="$directory"/pfx/drive_c/users/steamuser/AppData/LocalLow
@@ -101,7 +89,7 @@ function createPfxLinks() {
   if [[ -d "$appdataPath" && ! -L "$appdataPath" ]]; then
     createLinksWhenRelevant "$appName" "$appdataPath" "pfx_AppData_LocalLow"
   else
-    echo "No appdata locallow directory found"
+    echo "  No appdata locallow directory found"
   fi
 
   local appdataPath="$directory"/pfx/drive_c/users/steamuser/AppData/Roaming
@@ -109,24 +97,52 @@ function createPfxLinks() {
   if [[ -d "$appdataPath" && ! -L "$appdataPath" ]]; then
     createLinksWhenRelevant "$appName" "$appdataPath" "pfx_AppData_Roaming"
   else
-    echo "No appdata roaming directory found"
+    echo "  No appdata roaming directory found"
   fi
+}
+
+function createUserdataLinks() {
+  local appName="$1"
+  local appId="$2"
+
+  local directory
+  for directory in "$STEAM_USERDATA_PATH"/*/; do
+    # When not a directory, skip it
+    [[ -L "${directory%/}" ]] && echo "  Not a directory: $directory" && continue
+
+    local userConfig="$directory/config/localconfig.vdf"
+    local userId="$(basename -- "$directory")"
+    local userName="$(grep -oP '(?<="PersonaName"\t\t).*' "$userConfig" | tr "\"/><|:&" " " | sed 's/ //g')"
+
+    local gameUserdataDir="$directory$appId"
+
+    [[ ! -d "$gameUserdataDir" ]] && echo "  Target directory does not exist: $gameUserdataDir" && continue
+    mkdir -p "$LINKS_GO_HERE/$appName/steam_userdata/"
+    createLink "$LINKS_GO_HERE/$appName/steam_userdata/$userName" "$directory$appId"
+
+  done
 }
 
 function create() {
   local appManifest
   for appManifest in "$STEAM_APPMANIFEST_PATH/"*.acf; do
-    local appid="$(grep -oP '(?<="appid"\t\t).*' "$appManifest" | sed 's/"//g')"
+    local appId="$(grep -oP '(?<="appid"\t\t).*' "$appManifest" | sed 's/"//g')"
     local appName="$(grep -oP '(?<="name"\t\t).*' "$appManifest" | sed 's/"//g')"
-    local compatdataDir="$STEAM_COMPATDATA_PATH/$appid"
+    local installDirName="$(grep -oP '(?<="installdir"\t\t).*' "$appManifest" | sed 's/"//g')"
+    local compatdataDir="$STEAM_COMPATDATA_PATH/$appId"
 
-    # When Proton, skip it
-    [[ $appName == Proton* ]] && echo "Ignored because this: $appid is called: $appName" && continue
+    # When Proton, Steam Linux runtime or Steamworks, skip it
+    [[ $appName == Proton* ]] && echo "  Ignored because this: $appId is called: $appName" && continue
+    [[ $appName == "Steam Linux"* ]] && echo "  Ignored because this: $appId is called: $appName" && continue
+    [[ $appName == Steamworks* ]] && echo "  Ignored because this: $appId is called: $appName" && continue
 
-    echo "Working on - id: $appid name: $appName compatdata: $compatdataDir"
+    echo "Working on - id: $appId name: $appName compatdata: $compatdataDir"
 
     createPfxLinks "$appName" "$compatdataDir"
-    createUserdataLinks "$appName" "$compatdataDir"
+    createUserdataLinks "$appName" "$appId"
+
+    # When we find an installdir in appManifest, lets link it as well
+    [[ ! -z "$installDirName" ]] && createLink "$LINKS_GO_HERE/$appName/steam_localFiles" "$STEAM_INSTALL_PATH$installDirName"
 
     echo " "
     echo " "
