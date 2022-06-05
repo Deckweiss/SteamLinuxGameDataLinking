@@ -1,0 +1,20 @@
+[Desktop Entry]
+Comment[en_DK]=
+Comment=
+Exec=/home/deck/.SteamLinuxGameDataLinking/steamGameDataLinking.bash
+GenericName[en_DK]=
+GenericName=
+Icon=steam
+MimeType=
+Name[en_DK]=Link Steam Game Data
+Name=Link Steam Game Data
+Path=
+StartupNotify=true
+Terminal=false
+TerminalOptions=
+Type=Application
+X-DBUS-ServiceName=
+X-DBUS-StartupType=
+X-KDE-AutostartScript=true
+X-KDE-SubstituteUID=false
+X-KDE-Username=
