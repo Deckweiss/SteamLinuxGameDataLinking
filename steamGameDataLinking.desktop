@@ -1,7 +1,7 @@
 [Desktop Entry]
 Comment[en_DK]=
 Comment=
-Exec=/home/deck/.SteamLinuxGameDataLinking/steamGameDataLinking.bash
+Exec=/home/deck/.steamGameDataLinking/steamGameDataLinking.bash
 GenericName[en_DK]=
 GenericName=
 Icon=steam
